@@ -1,32 +1,32 @@
 #!/bin/bash
 ################################################################################
-# Script for installing Odoo V8 on Ubuntu 14.04 LTS (could be used for other version too)
+# Script for installing Odoo Community Backports V8 on Ubuntu 14.04 LTS (could be used for other version too)
 # Author: Yenthe Van Ginneken
 #-------------------------------------------------------------------------------
-# This script will install Odoo on your Ubuntu 14.04 server. It can install multiple Odoo instances
+# This script will install Odoo Community Backports on your Ubuntu 14.04 server. It can install multiple Odoo Community Backports instances
 # in one Ubuntu because of the different xmlrpc_ports
 #-------------------------------------------------------------------------------
 # Make a new file:
-# sudo nano odoo-install.sh
+# sudo nano odoocb-install.sh
 # Place this content in it and then make the file executable:
-# sudo chmod +x odoo-install.sh
-# Execute the script to install Odoo:
-# ./odoo-install
+# sudo chmod +x odoocb-install.sh
+# Execute the script to install Odoo Community Backports:
+# ./odoocb-install
 ################################################################################
  
 ##fixed parameters
-#odoo
-OE_USER="odoo"
+#odoo OCB
+OE_USER="odoocb"
 OE_HOME="/$OE_USER"
 OE_HOME_EXT="/$OE_USER/$OE_USER-server"
-#The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
+#The default port where this Odoo OCB instance will run under (provided you use the command -c in the terminal)
 #Set to true if you want to install it, false if you don't need it or have it already installed.
 INSTALL_WKHTMLTOPDF="True"
-#Choose the Odoo version which you want to install. For example: 8.0, 7.0 or saas-6. When using 'trunk' the master version will be installed.
-#IMPORTANT! This script will work fine for any Odoo version except V9. 9.0 needs extra libraries. Please use the script found at
+#Choose the Odoo OCB version which you want to install. For example: 8.0, 7.0 or saas-6. When using 'trunk' the master version will be installed.
+#IMPORTANT! This script will work fine for any Odoo OCB version except V9. 9.0 needs extra libraries. Please use the script found at
 #https://github.com/Yenthe666/InstallScript/tree/master/V9
 OE_VERSION="8.0"
-#Choose the port on which your Odoo should run (xmlrpc-port)
+#Choose the port on which your Odoo OCB should run (xmlrpc-port)
 OE_PORT="8069"
 #set the superadmin password
 OE_SUPERADMIN="admin"
@@ -48,7 +48,7 @@ sudo apt-get install postgresql -y
 echo -e "\n---- PostgreSQL $PG_VERSION Settings  ----"
 sudo sed -i s/"#listen_addresses = 'localhost'"/"listen_addresses = '*'"/g /etc/postgresql/9.3/main/postgresql.conf
 
-echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
+echo -e "\n---- Creating the ODOO OCB PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 
 #--------------------------------------------------
@@ -67,7 +67,7 @@ sudo pip install gdata psycogreen
 # Install Wkhtmltopdf if needed
 #--------------------------------------------------
 if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
-echo -e "\n---- Install wkhtml and place on correct place for ODOO 8 ----"
+echo -e "\n---- Install wkhtml and place on correct place for ODOO OCB 8 ----"
 sudo wget http://download.gna.org/wkhtmltopdf/0.12/0.12.1/wkhtmltox-0.12.1_linux-trusty-amd64.deb
 sudo dpkg -i wkhtmltox-0.12.1_linux-trusty-amd64.deb
 sudo cp /usr/local/bin/wkhtmltopdf /usr/bin
@@ -76,8 +76,8 @@ else
   echo "Wkhtmltopdf isn't installed due to the choice of the user!"
 fi
 	
-echo -e "\n---- Create ODOO system user ----"
-sudo adduser --system --quiet --shell=/bin/bash --home=$OE_HOME --gecos 'ODOO' --group $OE_USER
+echo -e "\n---- Create ODOO OCB system user ----"
+sudo adduser --system --quiet --shell=/bin/bash --home=$OE_HOME --gecos 'ODOO OCB' --group $OE_USER
 #The user should also be added to the sudo'ers group.
 sudo adduser $OE_USER sudo
 
@@ -86,10 +86,10 @@ sudo mkdir /var/log/$OE_USER
 sudo chown $OE_USER:$OE_USER /var/log/$OE_USER
 
 #--------------------------------------------------
-# Install ODOO
+# Install Odoo Community Backports (OCB)
 #--------------------------------------------------
-echo -e "\n==== Installing ODOO Server ===="
-sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $OE_HOME_EXT/
+echo -e "\n==== Installing ODOO OCB Server ===="
+sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/OCA/OCB $OE_HOME_EXT/
 
 echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir $OE_HOME/custom"
@@ -115,7 +115,7 @@ sudo su root -c "echo 'sudo -u $OE_USER $OE_HOME_EXT/openerp-server --config=/et
 sudo chmod 755 $OE_HOME_EXT/start.sh
 
 #--------------------------------------------------
-# Adding ODOO as a deamon (initscript)
+# Adding ODOO OCB as a deamon (initscript)
 #--------------------------------------------------
 
 echo -e "* Create init file"
@@ -129,7 +129,7 @@ echo '# Should-Stop: $network' >> ~/$OE_CONFIG
 echo '# Default-Start: 2 3 4 5' >> ~/$OE_CONFIG
 echo '# Default-Stop: 0 1 6' >> ~/$OE_CONFIG
 echo '# Short-Description: Enterprise Business Applications' >> ~/$OE_CONFIG
-echo '# Description: ODOO Business Applications' >> ~/$OE_CONFIG
+echo '# Description: ODOO OCB Business Applications' >> ~/$OE_CONFIG
 echo '### END INIT INFO' >> ~/$OE_CONFIG
 echo 'PATH=/bin:/sbin:/usr/bin' >> ~/$OE_CONFIG
 echo "DAEMON=$OE_HOME_EXT/openerp-server" >> ~/$OE_CONFIG
@@ -198,19 +198,19 @@ sudo chown root: /etc/init.d/$OE_CONFIG
 echo -e "* Change default xmlrpc port"
 sudo su root -c "echo 'xmlrpc_port = $OE_PORT' >> /etc/$OE_CONFIG.conf"
 
-echo -e "* Start ODOO on Startup"
+echo -e "* Start ODOO OCB on Startup"
 sudo update-rc.d $OE_CONFIG defaults
 
-echo -e "* Starting Odoo Service"
+echo -e "* Starting Odoo OCB Service"
 sudo su root -c "/etc/init.d/$OE_CONFIG start"
 echo "-----------------------------------------------------------"
-echo "Done! The Odoo server is up and running. Specifications:"
+echo "Done! The Odoo Community Backports server is up and running. Specifications:"
 echo "Port: $OE_PORT"
 echo "User service: $OE_USER"
 echo "User PostgreSQL: $OE_USER"
 echo "Code location: $OE_USER"
 echo "Addons folder: $OE_USER/$OE_CONFIG/addons/"
-echo "Start Odoo service: sudo service $OE_CONFIG start"
-echo "Stop Odoo service: sudo service $OE_CONFIG stop"
-echo "Restart Odoo service: sudo service $OE_CONFIG restart"
+echo "Start Odoo OCB service: sudo service $OE_CONFIG start"
+echo "Stop Odoo OCB service: sudo service $OE_CONFIG stop"
+echo "Restart Odoo OCB service: sudo service $OE_CONFIG restart"
 echo "-----------------------------------------------------------"
